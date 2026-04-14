@@ -14,3 +14,11 @@ from xgboost import XGBClassifier
 from lightgbm import LGBMClassifier
 load_dotenv()
 
+## dagshub connect 
+dagshub.init(
+    repo_owner="shovo896",
+    repo_name="Customer-chunk-prediction-end-to-end-ml-system",
+    mlflow=True
+)
+
+## data load 
