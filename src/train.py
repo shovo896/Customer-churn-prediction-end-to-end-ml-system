@@ -27,10 +27,10 @@ def load_data():
     processed_dir = Path("data/processed")
 
     candidates = {
-        "X_train": [processed_dir / "processed_data_X_train.csv", processed_dir / "processed_data.csv_X_train.csv"],
-        "X_test": [processed_dir / "processed_data_X_test.csv", processed_dir / "processed_data.csv_X_test.csv"],
-        "y_train": [processed_dir / "processed_data_y_train.csv", processed_dir / "processed_data.csv_y_train.csv"],
-        "y_test": [processed_dir / "processed_data_y_test.csv", processed_dir / "processed_data.csv_y_test.csv"],
+        "X_train": [processed_dir / "processed_data_X_train.csv"],
+        "X_test": [processed_dir / "processed_data_X_test.csv"],
+        "y_train": [processed_dir / "processed_data_y_train.csv"],
+        "y_test": [processed_dir / "processed_data_y_test.csv"],
     }
 
     resolved_paths = {}
