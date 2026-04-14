@@ -17,6 +17,8 @@ from sklearn.metrics import (
 )
 
 load_dotenv()
+MODEL_RUN_NAMES = {"Logistic Regression", "LightGBM", "XGBoost"}
+
 ## dagshub connect
 dagshub.init(
     repo_owner="shovo896",
@@ -40,15 +42,25 @@ def evaluate_and_register():
     if exp is None:
         raise RuntimeError("Experiment 'Customer Churn Prediction' not found. Run training first.")
 
-    runs = client.search_runs(
+    all_runs = client.search_runs(
         experiment_ids=[exp.experiment_id],
         order_by=["metrics.roc_auc DESC"],
-        max_results=100,
+        max_results=500,
     )
-    if not runs:
+    if not all_runs:
         raise RuntimeError("No runs found in experiment 'Customer Churn Prediction'.")
 
-    best_run = runs[0]
+    model_runs = [
+        run for run in all_runs
+        if run.data.tags.get("mlflow.runName") in MODEL_RUN_NAMES
+        and "roc_auc" in run.data.metrics
+    ]
+    if not model_runs:
+        raise RuntimeError(
+            "No trained model runs found (expected run names: Logistic Regression, LightGBM, XGBoost)."
+        )
+
+    best_run = max(model_runs, key=lambda run: run.data.metrics.get("roc_auc", float("-inf")))
     best_run_id = best_run.info.run_id
     best_roc_auc = best_run.data.metrics.get("roc_auc")
     best_model_name = best_run.data.tags.get("mlflow.runName", "Best Model")
