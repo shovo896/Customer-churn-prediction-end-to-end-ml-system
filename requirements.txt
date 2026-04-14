@@ -1,4 +1,6 @@
 # requirements.txt
+# Use Python 3.12 for this project.
+# The pinned ML stack here is not compatible with Python 3.13.
 
 #  ML
 scikit-learn==1.4.2
