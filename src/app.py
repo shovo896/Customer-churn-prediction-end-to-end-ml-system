@@ -18,13 +18,30 @@ dagshub.init(
 )   
 def load_production_model():
     client=mlflow.tracking.MlflowClient()
-    versions=client.get_latest_versions("Customer Churn Prediction Model", stages=["Production"])
-    if not versions:
-        raise RuntimeError("No production model found. Please run training and register a model first.")
-    model_uri=f"runs:/{versions[0].run_id}/model"
-    model=mlflow.sklearn.load_model(model_uri)
-    print(f"Loaded model from {model_uri}")
-    return model
+    try:
+        # Try to load from model registry
+        versions=client.get_latest_versions("Customer Churn Prediction Model", stages=["Production"])
+        if versions:
+            model_uri=f"runs:/{versions[0].run_id}/model"
+            model=mlflow.sklearn.load_model(model_uri)
+            print(f"Loaded model from registry: {model_uri}")
+            return model
+    except Exception as e:
+        print(f"Could not load from registry: {e}")
+    
+    # Fallback: Load from latest run
+    try:
+        runs=client.search_runs(experiment_ids=["0"], max_results=1)
+        if runs:
+            model_uri=f"runs:/{runs[0].info.run_id}/model"
+            model=mlflow.sklearn.load_model(model_uri)
+            print(f"Loaded model from latest run: {model_uri}")
+            return model
+    except Exception as e:
+        print(f"Could not load from latest run: {e}")
+    
+    raise RuntimeError("No production model found. Please run training and register a model first.")
+
 model=load_production_model()
 
 ## fastapi app
