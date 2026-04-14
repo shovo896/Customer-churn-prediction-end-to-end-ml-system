@@ -3,38 +3,65 @@ import numpy as np
 import mlflow
 import mlflow.sklearn
 import dagshub
+from concurrent.futures import ThreadPoolExecutor, TimeoutError
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 import uvicorn
-from sklearn.linear_model import LogisticRegression
 
 load_dotenv()
 
+
+class FallbackChurnModel:
+    """Simple fallback model to keep API responsive when remote model isn't available."""
+
+    def predict_proba(self, X):
+        n = len(X)
+        probs = np.full((n, 2), 0.0)
+        # Default low-risk probability
+        probs[:, 1] = 0.2
+        probs[:, 0] = 0.8
+        return probs
+
+    def predict(self, X):
+        proba = self.predict_proba(X)[:, 1]
+        return (proba >= 0.5).astype(int)
+
+
+def _load_remote_model():
+    dagshub.init(
+        repo_owner="shovo896",
+        repo_name="Customer-chunk-prediction-end-to-end-ml-system",
+        mlflow=True
+    )
+    client = mlflow.tracking.MlflowClient()
+    runs = client.search_runs(experiment_ids=["0"], max_results=10)
+    for run in runs:
+        if run.info.status == "FINISHED":
+            try:
+                model_uri = f"runs:/{run.info.run_id}/model"
+                model = mlflow.sklearn.load_model(model_uri)
+                print(f"✓ Loaded model: {run.info.run_id[:8]}...")
+                return model
+            except Exception:
+                continue
+    return None
+
 def load_production_model():
-    """Load production model with fallback to dummy model."""
+    """Load production model with timeout and fallback model."""
     try:
-        dagshub.init(
-            repo_owner="shovo896",
-            repo_name="Customer-chunk-prediction-end-to-end-ml-system",
-            mlflow=True
-        )
-        client = mlflow.tracking.MlflowClient()
-        runs = client.search_runs(experiment_ids=["0"], max_results=10)
-        for run in runs:
-            if run.info.status == "FINISHED":
-                try:
-                    model_uri = f"runs:/{run.info.run_id}/model"
-                    model = mlflow.sklearn.load_model(model_uri)
-                    print(f"✓ Loaded model: {run.info.run_id[:8]}...")
-                    return model
-                except Exception:
-                    continue
+        with ThreadPoolExecutor(max_workers=1) as executor:
+            future = executor.submit(_load_remote_model)
+            model = future.result(timeout=20)
+            if model is not None:
+                return model
+    except TimeoutError:
+        print("⚠ Remote model download timed out. Using fallback model.")
     except Exception:
         pass
-    
-    print("⚠ Using dummy model for demo")
-    return LogisticRegression(random_state=42)
+
+    print("⚠ Using fallback model for demo")
+    return FallbackChurnModel()
 
 model = load_production_model()
 
