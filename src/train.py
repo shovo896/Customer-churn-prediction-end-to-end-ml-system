@@ -51,3 +51,27 @@ def train_model(model,model_name,params,X_train,X_test,y_train,y_test):
         mlflow.log_params(params)
         mlflow.sklearn.log_model(model,artifact_path=model_name)
         
+        print(f"Model: {model_name}")
+        print(f"Metrics: {metrics}")
+        print(f"accuracy: {metrics['accuracy']}, f1_score: {metrics['f1_score']}, roc_auc: {metrics['roc_auc']}")
+        print(f"{'='*30}")
+        return metrics
+    
+if __name__ == "__main__":
+    with open("params.yaml") as f:
+        params=yaml.safe_load(f)
+        
+    X_train,X_test,y_train,y_test=load_data()
+    mlflow.set_experiment("Customer Churn Prediction")
+    
+    ## model 1 
+    lr_params=params["logistic_regression"]
+    train_model(
+        LogisticRegression(**lr_params),
+        "Logistic Regression",
+        lr_params,
+        X_train,X_test,y_train,y_test
+    )
+    
+    
+        
