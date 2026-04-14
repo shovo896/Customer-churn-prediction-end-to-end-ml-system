@@ -56,11 +56,11 @@ def load_production_model():
             if model is not None:
                 return model
     except TimeoutError:
-        print("⚠ Remote model download timed out. Using fallback model.")
+        print(" Remote model download timed out. Using fallback model.")
     except Exception:
         pass
 
-    print("⚠ Using fallback model for demo")
+    print(" Using fallback model for demo")
     return FallbackChurnModel()
 
 model = load_production_model()
