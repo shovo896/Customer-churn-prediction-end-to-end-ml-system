@@ -3,6 +3,7 @@ import numpy as np
 import mlflow
 import mlflow.sklearn
 import dagshub
+import os
 from pathlib import Path
 from concurrent.futures import ThreadPoolExecutor, TimeoutError
 from dotenv import load_dotenv
@@ -196,6 +197,6 @@ def predict_batch(data: list[CustomerData]):
 
 if __name__ == "__main__":
     print("Starting API...")
-    uvicorn.run(app, host="0.0.0.0", port=8000, reload=False)
+    uvicorn.run(app, host="0.0.0.0", port=int(os.getenv("PORT", "8001")), reload=False)
 
         
