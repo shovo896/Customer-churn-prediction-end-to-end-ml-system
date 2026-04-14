@@ -11,7 +11,7 @@ PROCESSED_DATA_PATH = "data/processed/processed_data.csv"
 def load_and_clean(path:str) -> pd.DataFrame:
     df=pd.read_csv(path)
     df["TotalCharges"] = pd.to_numeric(df["TotalCharges"], errors="coerce")
-    df['TotalCharges'].fillna(df['TotalCharges'].median(), inplace=True)
+    df['TotalCharges'] = df['TotalCharges'].fillna(df['TotalCharges'].median())
     df.drop("customerID", axis=1, inplace=True)
     print(f"Data loaded and cleaned successfully with shape: {df.shape}")
     return df
@@ -23,13 +23,16 @@ def engineer_features(df:pd.DataFrame) -> pd.DataFrame:
     return df
 
 
-def encode_and_scale(df:pd.DataFrame) -> pd.DataFrame:
+def encode_and_scale(df:pd.DataFrame):
     df['Churn'] = df['Churn'].map({'Yes': 1, 'No': 0})
-    binary_cols =['Partner', 'Dependents', 'PhoneService', 'PaperlessBilling','gender','paperLessBilling']
+    binary_cols = ['Partner', 'Dependents', 'PhoneService', 'PaperlessBilling', 'gender']
     for col in binary_cols:
-        df[col]=LabelEncoder().fit_transform(df[col])
-        
-        multiclass_cols = ['MultipleLines', 'InternetService', 'OnlineSecurity', 'OnlineBackup', 'DeviceProtection', 'TechSupport', 'StreamingTV', 'StreamingMovies','tenure_group']
+        if col not in df.columns:
+            raise KeyError(f"Column '{col}' not found in dataframe. Available columns: {df.columns.tolist()}")
+        encoded_col = LabelEncoder().fit_transform(df[col].astype(str))
+        df[col] = pd.Series(encoded_col, index=df.index, dtype="int64")
+
+    multiclass_cols = ['MultipleLines', 'InternetService', 'OnlineSecurity', 'OnlineBackup', 'DeviceProtection', 'TechSupport', 'StreamingTV', 'StreamingMovies', 'tenure_group']
     df = pd.get_dummies(df, columns=multiclass_cols, drop_first=True)
     X=df.drop("Churn", axis=1)
     y=df["Churn"]
