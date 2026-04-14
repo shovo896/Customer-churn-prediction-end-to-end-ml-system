@@ -11,35 +11,32 @@ stages:
           - random_state
           - test_size
     outs:
-      - data/processed/X_train.csv
-      - data/processed/X_test.csv
-      - data/processed/y_train.csv
-      - data/processed/y_test.csv
+      - data/processed/processed_data_X_train.csv
+      - data/processed/processed_data_X_test.csv
+      - data/processed/processed_data_y_train.csv
+      - data/processed/processed_data_y_test.csv
 
   train:
     cmd: python src/train.py
     deps:
       - src/train.py
-      - data/processed/X_train.csv
-      - data/processed/y_train.csv
+      - data/processed/processed_data_X_train.csv
+      - data/processed/processed_data_y_train.csv
     params:
       - params.yaml:
           - xgboost
           - lightgbm
           - logistic_regression
-    outs:
-      - models/
 
   evaluate:
     cmd: python src/evaluate.py
     deps:
       - src/evaluate.py
-      - data/processed/X_test.csv
-      - data/processed/y_test.csv
-      - models/
+      - data/processed/processed_data_X_test.csv
+      - data/processed/processed_data_y_test.csv
     metrics:
-      - reports/metrics.json:
+      - evaluation_results/metrics_Logistic_Regression.json:
           cache: false
     plots:
-      - reports/confusion_matrix.png:
+      - evaluation_results/confusion_matrix_Logistic_Regression.png:
           cache: false
