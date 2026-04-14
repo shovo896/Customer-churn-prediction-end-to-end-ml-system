@@ -70,3 +70,54 @@ ml-pipeline:
           git add dvc.lock reports/
           git diff --staged --quiet || git commit -m "ci: update dvc.lock and reports [skip ci]"
           git push
+
+
+## job check 
+api-test:
+    runs-on: ubuntu-latest
+    needs: ml-pipeline
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Start API in background
+        run: |
+          python src/app.py &
+          sleep 10
+
+      - name: Health check
+        run: |
+          curl -f http://localhost:8000/health || exit 1
+          echo "✅ API is healthy!"
+
+      - name: Test prediction endpoint
+        run: |
+          curl -X POST "http://localhost:8000/predict" \
+               -H "Content-Type: application/json" \
+               -d '{
+                     "tenure": 12.0,
+                     "MonthlyCharges": 65.5,
+                     "TotalCharges": 786.0,
+                     "SeniorCitizen": 0,
+                     "gender": 1,
+                     "Partner": 1,
+                     "Dependents": 0,
+                     "PhoneService": 1,
+                     "PaperlessBilling": 1,
+                     "charge_ratio": 0.083
+                   }' | python -c "
+          import sys, json
+          data = json.load(sys.stdin)
+          assert 'churn_prediction' in data
+          assert 'churn_probability' in data
+          print('✅ Prediction endpoint working!')
+          print(json.dumps(data, indent=2, ensure_ascii=False))
+          "
