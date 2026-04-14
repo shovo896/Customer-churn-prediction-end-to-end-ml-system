@@ -31,3 +31,34 @@ def load_data():
     return X_train, X_test, y_train, y_test
 
 X_train, X_test, y_train, y_test = load_data()
+
+def xgb_objective(trial):
+    params = {
+        "n_estimators": trial.suggest_int("n_estimators", 50, 300),
+        "max_depth": trial.suggest_int("max_depth", 3, 10),
+        "learning_rate": trial.suggest_float("learning_rate", 0.01, 0.3),
+        "subsample": trial.suggest_float("subsample", 0.5, 1.0),
+        "colsample_bytree": trial.suggest_float("colsample_bytree", 0.5, 1.0),
+        "random_state": 42,
+    }
+    model = XGBClassifier(**params)
+    scores = cross_val_score(model, X_train, y_train.values.ravel(), cv=5, scoring="roc_auc").mean()
+    
+    with mlflow.start_run(run_name=f"XGB Trial {trial.number}",nested=True):
+        mlflow.log_params(params)
+        mlflow.log_metric("roc_auc", round(scores, 4))
+    return scores.mean()
+
+## tune and save best model 
+def tune(objective, model_name,n_trials=50):
+    print(f"Starting hyperparameter tuning for {model_name} with {n_trials} trials...")
+    with mlflow.start_run(run_name=f"{model_name} Hyperparameter Tuning"):
+        study = optuna.create_study(direction="maximize")
+        study.optimize(objective, n_trials=n_trials,show_progress_bar=True)
+        
+        best_params=study.best_params
+        best_score=round(study.best_value,4)
+        mlflow.log_params(best_params)
+        mlflow.log_metric("best_roc_auc", best_score)
+        print(f"Best ROC AUC for {model_name}: {best_score} with params: {best_params}")
+    return study.best_params
