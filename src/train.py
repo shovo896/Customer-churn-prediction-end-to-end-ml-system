@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 import os
+from pathlib import Path
 import mlflow 
 import mlflow.sklearn
 from dotenv import load_dotenv
@@ -23,11 +24,30 @@ dagshub.init(
 
 ## data load 
 def load_data():
-    X_train=pd.read_csv("data/processed/processed_data_X_train.csv")
-    X_test=pd.read_csv("data/processed/processed_data_X_test.csv")
-    y_train=pd.read_csv("data/processed/processed_data_y_train.csv")
-    y_test=pd.read_csv("data/processed/processed_data_y_test.csv")
-    return X_train,X_test,y_train,y_test
+    processed_dir = Path("data/processed")
+
+    candidates = {
+        "X_train": [processed_dir / "processed_data_X_train.csv", processed_dir / "processed_data.csv_X_train.csv"],
+        "X_test": [processed_dir / "processed_data_X_test.csv", processed_dir / "processed_data.csv_X_test.csv"],
+        "y_train": [processed_dir / "processed_data_y_train.csv", processed_dir / "processed_data.csv_y_train.csv"],
+        "y_test": [processed_dir / "processed_data_y_test.csv", processed_dir / "processed_data.csv_y_test.csv"],
+    }
+
+    resolved_paths = {}
+    for name, options in candidates.items():
+        found = next((p for p in options if p.exists()), None)
+        if found is None:
+            raise FileNotFoundError(
+                f"Missing processed file for {name}. Checked: {[str(p) for p in options]}. "
+                "Run `python src/feature_engineering.py` first."
+            )
+        resolved_paths[name] = found
+
+    X_train = pd.read_csv(resolved_paths["X_train"])
+    X_test = pd.read_csv(resolved_paths["X_test"])
+    y_train = pd.read_csv(resolved_paths["y_train"])
+    y_test = pd.read_csv(resolved_paths["y_test"])
+    return X_train, X_test, y_train, y_test
 
 # metrics helper 
 def get_metrics(y_true, y_pred,y_prob):
