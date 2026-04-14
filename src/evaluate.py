@@ -63,6 +63,27 @@ for k,v in final_metrics.items():
     print(f"Evaluation results saved to evaluation_results/ directory.")
     
     
-    
-    
+    ## mlflow register model
+    with mlflow.start_run(run_name="final_evaluation"):
+        mlflow.log_metrics(final_metrics)
+        mlflow.log_artifact("reports/confusion_matrix.png")
+        mlflow.log_artifact("reports/metrics.json")
+        registered=mlflow.register_model(model_uri, "CustomerChurnModel")
+        
+        client.transition_model_version_stage(
+            name="CustomerChurnModel",
+            version=registered.version,
+            stage="Production",
+            archive_existing_versions=True
+        )
+        print(f"Model registered in MLflow Model Registry with version: {registered.version} and transitioned to Production stage.")
+        print(f"Evaluation and model registration completed successfully.")
+        
+if __name__ == "__main__":
+    dagshub.init(
+        repo_owner="shovo896",
+        repo_name="Customer-chunk-prediction-end-to-end-ml-system",
+        mlflow=True
+    )
+    evaluate_and_register()
     
