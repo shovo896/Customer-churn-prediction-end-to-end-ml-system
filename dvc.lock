@@ -1,7 +1,7 @@
 schema: '2.0'
 stages:
   feature_engineering:
-    cmd: python src/feature_engineering.py
+    cmd: conda run -n churn-env python src/feature_engineering.py
     deps:
     - path: data/raw/WA_Fn-UseC_-Telco-Customer-Churn.csv
       hash: md5
