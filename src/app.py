@@ -33,3 +33,42 @@ app=FastAPI(
     description="API for predicting customer churn using the trained model.",
     version="1.0.0"
 )
+
+## input schema
+class CustomerData(BaseModel):
+    tenure:float
+    MonthlyCharges:float
+    TotalCharges:float
+    SeniorCitizen:int
+    Partner:int 
+    gender:int
+    Dependents:int
+    PhoneService:int
+    PaperlessBilling:int
+    charge_ratio:float
+    
+    class Config:
+        json_schema_extra={
+            "example":{
+                "tenure": 12,
+                "MonthlyCharges": 70.35,
+                "TotalCharges": 845.5,
+                "SeniorCitizen": 0,
+                "Partner": 1,
+                "gender": 0,
+                "Dependents": 0,
+                "PhoneService": 1,
+                "PaperlessBilling": 1,
+                "charge_ratio": 0.083
+            }
+        }
+        
+        
+# output schema
+class PredictionResponse(BaseModel):
+    churn_probability: float
+    churn_prediction: int
+    risk_level: str
+    message: str
+    
+    
