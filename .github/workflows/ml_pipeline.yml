@@ -11,7 +11,7 @@ env:
   MLFLOW_TRACKING_URI: ${{ secrets.MLFLOW_TRACKING_URI }}
 
 jobs:
-    code-quality:
+  code-quality:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -27,7 +27,7 @@ jobs:
       - name: Run flake8
         run: flake8 src/ --max-line-length=100 --ignore=E402
 
-ml-pipeline:
+  ml-pipeline:
     runs-on: ubuntu-latest
     needs: code-quality
 
@@ -64,6 +64,7 @@ ml-pipeline:
         run: dvc push
 
       - name: Commit updated dvc.lock
+        if: github.event_name == 'push'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
@@ -73,7 +74,7 @@ ml-pipeline:
 
 
 ## job check 
-api-test:
+  api-test:
     runs-on: ubuntu-latest
     needs: ml-pipeline
 
@@ -90,17 +91,17 @@ api-test:
 
       - name: Start API in background
         run: |
-          python src/app.py &
+          PORT=8001 python src/app.py &
           sleep 10
 
       - name: Health check
         run: |
-          curl -f http://localhost:8000/health || exit 1
+          curl -f http://localhost:8001/health || exit 1
           echo "✅ API is healthy!"
 
       - name: Test prediction endpoint
         run: |
-          curl -X POST "http://localhost:8000/predict" \
+          curl -X POST "http://localhost:8001/predict" \
                -H "Content-Type: application/json" \
                -d '{
                      "tenure": 12.0,
