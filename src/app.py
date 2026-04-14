@@ -85,3 +85,39 @@ def root():
 def health():
     return {"status": "ok", "message": "API is healthy and ready to serve predictions."}
 
+
+@app.post("/predict", response_model=PredictionResponse)
+def predict(data: CustomerData):
+    try: 
+        input_df=pd.DataFrame([data.model_dump()])
+        prediction_prob=model.predict(input_df)[0]
+        probability=round(float(model.predict_proba(input_df)[0][1]),4)
+        risk_level="High" if probability > 0.7 else "Medium" if probability > 0.4 else "Low"
+        return PredictionResponse(
+            churn_probability=probability,
+            churn_prediction=int(prediction_prob),
+            risk_level=risk_level,
+            message="Prediction successful"
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Prediction failed: {str(e)}")
+@app.post("/predict_batch")
+def predict_batch(data: list[CustomerData]):
+    try:
+        input_df=pd.DataFrame([item.model_dump() for item in data])
+        predictions=model.predict(input_df)
+        probabilities=model.predict_proba(input_df)[:,1]
+        results=[]
+        for pred, prob in zip(predictions, probabilities):
+            risk_level="High" if prob > 0.7 else "Medium" if prob > 0.4 else "Low"
+            results.append({
+                "churn_probability": round(float(prob),4),
+                "churn_prediction": int(pred),
+                "risk_level": risk_level
+            })
+        return {"predictions": results, "message": "Batch prediction successful"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Batch prediction failed: {str(e)}")
+if __name__ == "__main__":
+    uvicorn.run(app, host="0.0.0.0", port=8000,reload=True)
+        
