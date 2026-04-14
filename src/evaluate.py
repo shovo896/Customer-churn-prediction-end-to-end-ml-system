@@ -50,5 +50,19 @@ print(f"Final Evaluation Metrics: {final_metrics}")
 for k,v in final_metrics.items():
     print(f"{k}: {v}")
     os.makedirs("evaluation_results", exist_ok=True)
-    cm=ConfusionMatrixDisplay(cm,display_labels=["Not Churn","Churn"])
+    cm=confusion_matrix(y_test, y_pred)
+    disp=ConfusionMatrixDisplay(cm,display_labels=["Not Churn","Churn"])
+    disp.plot(cmap=plt.cm.Blues)
+    plt.title(f"Confusion Matrix - {best_model_name}")
+    plt.savefig(f"evaluation_results/confusion_matrix_{best_model_name}.png")
+    plt.close()
+    
+    ## metrics save as json 
+    with open(f"evaluation_results/metrics_{best_model_name}.json","w") as f:
+        json.dump(final_metrics,f,indent=4)
+    print(f"Evaluation results saved to evaluation_results/ directory.")
+    
+    
+    
+    
     
