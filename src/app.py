@@ -72,3 +72,16 @@ class PredictionResponse(BaseModel):
     message: str
     
     
+# routes 
+    
+@app.get("/")
+def root():
+    return {
+        "message": "Welcome to the Customer Churn Prediction API. Use the /predict endpoint to get predictions."
+        "docs" : "/docs"
+    }
+    
+@app.get("/health")
+def health():
+    return {"status": "ok", "message": "API is healthy and ready to serve predictions."}
+
