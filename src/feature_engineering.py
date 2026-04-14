@@ -40,3 +40,11 @@ def encode_and_scale(df:pd.DataFrame) -> pd.DataFrame:
     X_test[num_cols]=scaler.transform(X_test[num_cols])
     print(f"Encoding and scaling completed. Train shape: {X_train.shape}, Test shape: {X_test.shape}")
     return X_train, X_test, y_train, y_test 
+
+def save_processed(X_train,X_test,y_train,y_test):
+    os.makedirs(os.path.dirname(PROCESSED_DATA_PATH), exist_ok=True)
+    X_train.to_csv(f"{PROCESSED_DATA_PATH}_X_train.csv", index=False)
+    X_test.to_csv(f"{PROCESSED_DATA_PATH}_X_test.csv", index=False)
+    y_train.to_csv(f"{PROCESSED_DATA_PATH}_y_train.csv", index=False)
+    y_test.to_csv(f"{PROCESSED_DATA_PATH}_y_test.csv", index=False)
+    print(f"Processed data saved to {PROCESSED_DATA_PATH}")
