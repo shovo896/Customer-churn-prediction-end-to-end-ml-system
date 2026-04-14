@@ -17,6 +17,7 @@ dagshub==0.3.25
 # Data Versioning
 dvc==3.50.1
 dvc-http==2.32.0
+pathspec>=0.10.3,<1
 
 # Hyperparameter Tuning
 optuna==3.6.1
