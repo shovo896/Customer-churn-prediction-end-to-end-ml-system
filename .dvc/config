@@ -1,0 +1,5 @@
+[core]
+    remote = dagshub
+['remote "dagshub"']
+    url = s3://dvc
+    endpointurl = https://dagshub.com/shovo896/Customer-chunk-prediction-end-to-end-ml-system.s3
