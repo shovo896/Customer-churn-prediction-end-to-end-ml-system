@@ -40,3 +40,14 @@ def get_metrics(y_true, y_pred,y_prob):
     
     
 ## single train run 
+def train_model(model,model_name,params,X_train,X_test,y_train,y_test):
+    with mlflow.start_run(run_name=model_name):
+        mlflow.log_params(params)
+        model.fit(X_train, y_train.values.ravel())
+        y_pred=model.predict(X_test)
+        y_prob=model.predict_proba(X_test)[:,1]
+        metrics=get_metrics(y_test,y_pred,y_prob)
+        mlflow.log_metrics(metrics)
+        mlflow.log_params(params)
+        mlflow.sklearn.log_model(model,artifact_path=model_name)
+        
