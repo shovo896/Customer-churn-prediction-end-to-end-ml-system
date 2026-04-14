@@ -48,3 +48,10 @@ def save_processed(X_train,X_test,y_train,y_test):
     y_train.to_csv(f"{PROCESSED_DATA_PATH}_y_train.csv", index=False)
     y_test.to_csv(f"{PROCESSED_DATA_PATH}_y_test.csv", index=False)
     print(f"Processed data saved to {PROCESSED_DATA_PATH}")
+    
+    
+if __name__ == "__main__":
+    df=load_and_clean(RAW_DATA_PATH)
+    df=engineer_features(df)
+    X_train, X_test, y_train, y_test = encode_and_scale(df)
+    save_processed(X_train, X_test, y_train, y_test)
