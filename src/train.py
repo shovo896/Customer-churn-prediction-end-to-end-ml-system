@@ -22,3 +22,18 @@ dagshub.init(
 )
 
 ## data load 
+def load_data():
+    X_train=pd.read_csv("data/processed/processed_data_X_train.csv")
+    X_test=pd.read_csv("data/processed/processed_data_X_test.csv")
+    y_train=pd.read_csv("data/processed/processed_data_y_train.csv")
+    y_test=pd.read_csv("data/processed/processed_data_y_test.csv")
+    return X_train,X_test,y_train,y_test
+
+# metrics helper 
+def get_metrics(y_true, y_pred,y_prob):
+    return {
+        "accuracy": round(accuracy_score(y_true, y_pred), 4),
+        "f1_score": round(f1_score(y_true, y_pred), 4),
+        "roc_auc": round(roc_auc_score(y_true, y_prob), 4),
+        
+    }
