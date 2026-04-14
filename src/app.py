@@ -16,47 +16,29 @@ dagshub.init(
     repo_name="Customer-chunk-prediction-end-to-end-ml-system",
     mlflow=True
 )   
+
 def load_production_model():
-    """
-    Load the production model from MLflow. 
-    Tries multiple strategies:
-    1. Model registry Production stage (remote)
-    2. Latest run artifact
-    3. Return None and set as lazy-load
-    """
-    client = mlflow.tracking.MlflowClient()
-    model = None
-    
-    # Strategy 1: Try model registry
+    """Load production model with fallback to dummy model."""
     try:
-        versions = client.get_latest_versions("Customer Churn Prediction Model", stages=["Production"])
-        if versions:
-            model_uri = f"runs:/{versions[0].run_id}/model"
-            model = mlflow.sklearn.load_model(model_uri)
-            print(f"✓ Loaded model from registry: {model_uri}")
-            return model
-    except Exception as e:
-        pass
-    
-    # Strategy 2: Load from latest completed run
-    try:
+        client = mlflow.tracking.MlflowClient()
+        # Load from latest finished run in experiment 0
         runs = client.search_runs(experiment_ids=["0"], max_results=10)
         for run in runs:
             if run.info.status == "FINISHED":
                 try:
                     model_uri = f"runs:/{run.info.run_id}/model"
                     model = mlflow.sklearn.load_model(model_uri)
-                    print(f"✓ Loaded model from latest run: {model_uri}")
+                    print(f"✓ Loaded model: {run.info.run_id[:8]}...")
                     return model
                 except Exception:
-                    pass
-    except Exception:
-        pass
+                    continue
+    except Exception as e:
+        print(f"Info: Could not load from MLflow registry")
     
-    # If we get here, set a default model that can make dummy predictions
-    print("⚠ Warning: No trained model found. API will return dummy predictions.")
+    # Fallback: Create a dummy logistic regression model
+    print("⚠ No trained model found, using dummy model for demo")
     from sklearn.linear_model import LogisticRegression
-    model = LogisticRegression()
+    model = LogisticRegression(random_state=42)
     return model
 
 model = load_production_model()
