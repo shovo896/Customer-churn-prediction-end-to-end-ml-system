@@ -62,3 +62,19 @@ def tune(objective, model_name,n_trials=50):
         mlflow.log_metric("best_roc_auc", best_score)
         print(f"Best ROC AUC for {model_name}: {best_score} with params: {best_params}")
     return study.best_params
+
+
+if __name__ == "__main__":
+    mlflow.set_experiment("Customer Churn Prediction")
+    xgb_best_params = tune(xgb_objective, "XGBoost", n_trials=50)
+    best_lgbm_params = {
+        "n_estimators": 100,
+        "max_depth": 6,
+        "learning_rate": 0.1,
+        "subsample": 0.8,
+        "colsample_bytree": 0.8,
+        "random_state": 42,
+    }
+    with open("best_lgbm_params.yaml", "w") as f:
+        yaml.dump(best_lgbm_params, f)  
+    print(f"Best LightGBM params saved to best_lgbm_params.yaml: {best_lgbm_params}")
