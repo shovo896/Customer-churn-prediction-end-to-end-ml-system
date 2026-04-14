@@ -21,7 +21,7 @@ boto3==1.42.84
 dvc==3.50.1
 dvc-http==2.32.0
 dvc-s3==3.3.0
-pathspec>=0.10.3,<1
+pathspec>=0.10.3,<0.12
 
 # Hyperparameter Tuning
 optuna==3.6.1
