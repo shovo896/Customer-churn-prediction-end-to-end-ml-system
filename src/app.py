@@ -39,9 +39,23 @@ def _load_remote_model():
     for run in runs:
         if run.info.status == "FINISHED":
             try:
-                model_uri = f"runs:/{run.info.run_id}/model"
+                run_name = run.data.tags.get("mlflow.runName", "")
+                top_artifacts = client.list_artifacts(run.info.run_id)
+                top_paths = [a.path for a in top_artifacts]
+
+                # Training script logged models under run-name folder, not always under "model"
+                candidate_paths = []
+                if run_name:
+                    candidate_paths.append(run_name)
+                candidate_paths.extend(["model", "Logistic Regression", "LightGBM", "XGBoost"])
+
+                model_subpath = next((p for p in candidate_paths if p in top_paths), None)
+                if not model_subpath:
+                    continue
+
+                model_uri = f"runs:/{run.info.run_id}/{model_subpath}"
                 model = mlflow.sklearn.load_model(model_uri)
-                print(f"✓ Loaded model: {run.info.run_id[:8]}...")
+                print(f"✓ Loaded model: {run.info.run_id[:8]}... ({model_subpath})")
                 return model
             except Exception:
                 continue
