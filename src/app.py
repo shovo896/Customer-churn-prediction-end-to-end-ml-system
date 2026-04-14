@@ -77,8 +77,8 @@ class PredictionResponse(BaseModel):
 @app.get("/")
 def root():
     return {
-        "message": "Welcome to the Customer Churn Prediction API. Use the /predict endpoint to get predictions."
-        "docs" : "/docs"
+        "message": "Welcome to the Customer Churn Prediction API. Use the /predict endpoint to get predictions.",
+        "docs": "/docs"
     }
     
 @app.get("/health")
