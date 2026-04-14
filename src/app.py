@@ -11,15 +11,19 @@ import uvicorn
 
 load_dotenv()
 
-dagshub.init(
-    repo_owner="shovo896",
-    repo_name="Customer-chunk-prediction-end-to-end-ml-system",
-    mlflow=True
-)   
+# Note: dagshub.init is called later after model loading
+# to avoid remote connection issues during startup
 
 def load_production_model():
     """Load production model with fallback to dummy model."""
     try:
+        # Initialize dagshub/MLflow first
+        dagshub.init(
+            repo_owner="shovo896",
+            repo_name="Customer-chunk-prediction-end-to-end-ml-system",
+            mlflow=True
+        )
+        
         client = mlflow.tracking.MlflowClient()
         # Load from latest finished run in experiment 0
         runs = client.search_runs(experiment_ids=["0"], max_results=10)
@@ -33,10 +37,10 @@ def load_production_model():
                 except Exception:
                     continue
     except Exception as e:
-        print(f"Info: Could not load from MLflow registry")
+        pass
     
     # Fallback: Create a dummy logistic regression model
-    print("⚠ No trained model found, using dummy model for demo")
+    print("⚠ No MLflow model found, using dummy model")
     from sklearn.linear_model import LogisticRegression
     model = LogisticRegression(random_state=42)
     return model
