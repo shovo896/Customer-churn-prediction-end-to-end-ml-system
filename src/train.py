@@ -72,6 +72,22 @@ if __name__ == "__main__":
         lr_params,
         X_train,X_test,y_train,y_test
     )
+    # model 2 
+    lightgbm_params=params["lightgbm"]
+    train_model(
+        LGBMClassifier(**lightgbm_params),
+        "LightGBM",
+        lightgbm_params,
+        X_train,X_test,y_train,y_test
+    )
+    # model 3 
+    xgboost_params=params["xgboost"]
+    train_model(
+        XGBClassifier(**xgboost_params),
+        "XGBoost",
+        xgboost_params,
+        X_train,X_test,y_train,y_test
+    )
     
     
         
