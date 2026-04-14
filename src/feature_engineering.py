@@ -21,3 +21,22 @@ def engineer_features(df:pd.DataFrame) -> pd.DataFrame:
     df['charge_ratio']=df['MonthlyCharges']/(df['TotalCharges'] + 1)
     print(f"Feature engineering:{df.shape}")
     return df
+
+
+def encode_and_scale(df:pd.DataFrame) -> pd.DataFrame:
+    df['Churn'] = df['Churn'].map({'Yes': 1, 'No': 0})
+    binary_cols =['Partner', 'Dependents', 'PhoneService', 'PaperlessBilling','gender','paperLessBilling']
+    for col in binary_cols:
+        df[col]=LabelEncoder().fit_transform(df[col])
+        
+        multiclass_cols = ['MultipleLines', 'InternetService', 'OnlineSecurity', 'OnlineBackup', 'DeviceProtection', 'TechSupport', 'StreamingTV', 'StreamingMovies','tenure_group']
+    df = pd.get_dummies(df, columns=multiclass_cols, drop_first=True)
+    X=df.drop("Churn", axis=1)
+    y=df["Churn"]
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+    scaler=StandardScaler()
+    num_cols=['tenure', 'MonthlyCharges', 'TotalCharges','charge_ratio']
+    X_train[num_cols]=scaler.fit_transform(X_train[num_cols])
+    X_test[num_cols]=scaler.transform(X_test[num_cols])
+    print(f"Encoding and scaling completed. Train shape: {X_train.shape}, Test shape: {X_test.shape}")
+    return X_train, X_test, y_train, y_test 
