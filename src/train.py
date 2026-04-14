@@ -52,9 +52,9 @@ def load_data():
 # metrics helper 
 def get_metrics(y_true, y_pred,y_prob):
     return {
-        "accuracy": round(accuracy_score(y_true, y_pred), 4),
-        "f1_score": round(f1_score(y_true, y_pred), 4),
-        "roc_auc": round(roc_auc_score(y_true, y_prob), 4),
+        "accuracy": float(round(float(accuracy_score(y_true, y_pred)), 4)),
+        "f1_score": float(round(float(f1_score(y_true, y_pred)), 4)),
+        "roc_auc": float(round(float(roc_auc_score(y_true, y_prob)), 4)),
         
     }
     
@@ -68,7 +68,6 @@ def train_model(model,model_name,params,X_train,X_test,y_train,y_test):
         y_prob=model.predict_proba(X_test)[:,1]
         metrics=get_metrics(y_test,y_pred,y_prob)
         mlflow.log_metrics(metrics)
-        mlflow.log_params(params)
         mlflow.sklearn.log_model(model,artifact_path=model_name)
         
         print(f"Model: {model_name}")

@@ -6,7 +6,7 @@ import os
 
 
 RAW_DATA_PATH = "data/raw/WA_Fn-UseC_-Telco-Customer-Churn.csv"
-PROCESSED_DATA_PATH = "data/processed/processed_data.csv"
+PROCESSED_DATA_PATH = "data/processed/processed_data"
 
 def load_and_clean(path:str) -> pd.DataFrame:
     df=pd.read_csv(path)
@@ -32,8 +32,11 @@ def encode_and_scale(df:pd.DataFrame):
         encoded_col = LabelEncoder().fit_transform(df[col].astype(str))
         df[col] = pd.Series(encoded_col, index=df.index, dtype="int64")
 
-    multiclass_cols = ['MultipleLines', 'InternetService', 'OnlineSecurity', 'OnlineBackup', 'DeviceProtection', 'TechSupport', 'StreamingTV', 'StreamingMovies', 'tenure_group']
-    df = pd.get_dummies(df, columns=multiclass_cols, drop_first=True)
+    remaining_categorical_cols = [
+        col for col in df.columns
+        if col != 'Churn' and (df[col].dtype == 'object' or str(df[col].dtype) == 'category')
+    ]
+    df = pd.get_dummies(df, columns=remaining_categorical_cols, drop_first=True)
     X=df.drop("Churn", axis=1)
     y=df["Churn"]
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
