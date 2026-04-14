@@ -1,0 +1,33 @@
+# requirements.txt
+
+#  ML
+scikit-learn==1.4.2
+xgboost==2.0.3
+lightgbm==4.3.0
+imbalanced-learn==0.12.2
+
+# Data
+pandas==2.2.2
+numpy==1.26.4
+
+# Experiment Tracking
+mlflow==2.13.0
+dagshub==0.3.25
+
+# Data Versioning
+dvc==3.50.1
+dvc-http==2.32.0
+
+# Hyperparameter Tuning
+optuna==3.6.1
+
+# Visualization
+matplotlib==3.8.4
+seaborn==0.13.2
+
+# Utils
+python-dotenv==1.0.1
+
+# Serving (later use)
+fastapi==0.111.0
+uvicorn==0.29.0
