@@ -15,3 +15,9 @@ def load_and_clean(path:str) -> pd.DataFrame:
     df.drop("customerID", axis=1, inplace=True)
     print(f"Data loaded and cleaned successfully with shape: {df.shape}")
     return df
+
+def engineer_features(df:pd.DataFrame) -> pd.DataFrame:
+    df['tenure_group']=pd.cut(df['tenure'], bins=[0, 12, 24, 48, 60, np.inf], labels=['0-12', '13-24', '25-48', '49-60', '60+'])
+    df['charge_ratio']=df['MonthlyCharges']/(df['TotalCharges'] + 1)
+    print(f"Feature engineering:{df.shape}")
+    return df
