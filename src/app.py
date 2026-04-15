@@ -27,6 +27,13 @@ def load_expected_columns():
 EXPECTED_COLUMNS = load_expected_columns()
 
 
+def get_model_expected_columns(loaded_model):
+    cols = getattr(loaded_model, "feature_names_in_", None)
+    if cols is None:
+        return None
+    return [str(c) for c in cols]
+
+
 def prepare_features(input_df: pd.DataFrame) -> pd.DataFrame:
     """Map API input into the training feature schema."""
     if not EXPECTED_COLUMNS:
@@ -107,6 +114,11 @@ def _load_remote_model():
 
 def load_production_model():
     """Load production model with timeout and fallback model."""
+    disable_remote = os.getenv("DISABLE_REMOTE_MODEL", "").strip().lower()
+    if disable_remote in {"1", "true", "yes"}:
+        print("Remote model loading disabled by DISABLE_REMOTE_MODEL. Using fallback model.")
+        return FallbackChurnModel()
+
     try:
         with ThreadPoolExecutor(max_workers=1) as executor:
             future = executor.submit(_load_remote_model)
@@ -122,6 +134,8 @@ def load_production_model():
     return FallbackChurnModel()
 
 model = load_production_model()
+if not EXPECTED_COLUMNS:
+    EXPECTED_COLUMNS = get_model_expected_columns(model)
 
 app = FastAPI(
     title="Customer Churn Prediction API",

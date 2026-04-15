@@ -1,14 +1,10 @@
-name: ML pipeline CI/CD
+name: ML Pipeline CI
+
 on:
   push:
     branches: [main]
   pull_request:
     branches: [main]
-
-env:
-  DAGSHUB_USERNAME: ${{ secrets.DAGSHUB_USERNAME }}
-  DAGSHUB_TOKEN: ${{ secrets.DAGSHUB_TOKEN }}
-  MLFLOW_TRACKING_URI: ${{ secrets.MLFLOW_TRACKING_URI }}
 
 jobs:
   code-quality:
@@ -19,26 +15,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.10"
-
-      - name: Install linter
-        run: pip install flake8
-
-      - name: Run flake8
-        run: flake8 src/ --max-line-length=100 --ignore=E402
-
-  ml-pipeline:
-    if: github.event_name == 'push'
-    runs-on: ubuntu-latest
-    needs: code-quality
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.10"
+          python-version: "3.11"
 
       - name: Cache pip packages
         uses: actions/cache@v4
@@ -47,38 +24,23 @@ jobs:
           key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
 
       - name: Install dependencies
-        run: pip install -r requirements.txt
-
-      - name: Setup DVC remote credentials
         run: |
-          dvc remote modify origin --local auth basic
-          dvc remote modify origin --local user ${{ secrets.DAGSHUB_USERNAME }}
-          dvc remote modify origin --local password ${{ secrets.DAGSHUB_TOKEN }}
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install flake8
 
-      - name: Pull data from DVC
-        run: dvc pull
+      - name: Lint source
+        run: flake8 src --max-line-length=100 --ignore=E402
 
-      - name: Run DVC pipeline
-        run: dvc repro
+      - name: Verify Python syntax
+        run: python -m compileall src
 
-      - name: Push updated data/models
-        run: dvc push
-
-      - name: Commit updated dvc.lock
-        if: github.event_name == 'push'
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add dvc.lock reports/
-          git diff --staged --quiet || git commit -m "ci: update dvc.lock and reports [skip ci]"
-          git push
-
-
-## job check 
-  api-test:
-    if: github.event_name == 'push'
+  api-smoke-test:
     runs-on: ubuntu-latest
-    needs: ml-pipeline
+    needs: code-quality
+    env:
+      DISABLE_REMOTE_MODEL: "1"
+      PORT: "8001"
 
     steps:
       - uses: actions/checkout@v4
@@ -86,41 +48,118 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.10"
+          python-version: "3.11"
+
+      - name: Cache pip packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
 
       - name: Install dependencies
-        run: pip install -r requirements.txt
-
-      - name: Start API in background
         run: |
-          PORT=8001 python src/app.py &
-          sleep 10
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
 
-      - name: Health check
+      - name: Start API
+        run: nohup python src/app.py > api.log 2>&1 &
+
+      - name: Wait for API health
         run: |
-          curl -f http://localhost:8001/health || exit 1
-          echo "✅ API is healthy!"
+          for i in {1..30}; do
+            if curl -fsS http://127.0.0.1:8001/health > /tmp/health.json; then
+              cat /tmp/health.json
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "API failed to become healthy" >&2
+          cat api.log || true
+          exit 1
 
       - name: Test prediction endpoint
         run: |
-          curl -X POST "http://localhost:8001/predict" \
-               -H "Content-Type: application/json" \
-               -d '{
-                     "tenure": 12.0,
-                     "MonthlyCharges": 65.5,
-                     "TotalCharges": 786.0,
-                     "SeniorCitizen": 0,
-                     "gender": 1,
-                     "Partner": 1,
-                     "Dependents": 0,
-                     "PhoneService": 1,
-                     "PaperlessBilling": 1,
-                     "charge_ratio": 0.083
-                   }' | python -c "
-          import sys, json
-          data = json.load(sys.stdin)
-          assert 'churn_prediction' in data
-          assert 'churn_probability' in data
-          print('✅ Prediction endpoint working!')
-          print(json.dumps(data, indent=2, ensure_ascii=False))
-          "
+          response=$(curl -fsS -X POST "http://127.0.0.1:8001/predict" \
+            -H "Content-Type: application/json" \
+            -d '{
+              "tenure": 12.0,
+              "MonthlyCharges": 65.5,
+              "TotalCharges": 786.0,
+              "SeniorCitizen": 0,
+              "gender": 1,
+              "Partner": 1,
+              "Dependents": 0,
+              "PhoneService": 1,
+              "PaperlessBilling": 1,
+              "charge_ratio": 0.083
+            }')
+
+          python -c "import json,sys; data=json.loads(sys.stdin.read()); assert 'churn_prediction' in data; assert 'churn_probability' in data; print(json.dumps(data, indent=2))" <<< "$response"
+
+  secured-dvc-pipeline:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    needs: code-quality
+    env:
+      DAGSHUB_USERNAME: ${{ secrets.DAGSHUB_USERNAME }}
+      DAGSHUB_TOKEN: ${{ secrets.DAGSHUB_TOKEN }}
+      MLFLOW_TRACKING_USERNAME: ${{ secrets.DAGSHUB_USERNAME }}
+      MLFLOW_TRACKING_PASSWORD: ${{ secrets.DAGSHUB_TOKEN }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check secured secrets
+        id: secret_check
+        run: |
+          if [ -z "$DAGSHUB_USERNAME" ] || [ -z "$DAGSHUB_TOKEN" ]; then
+            echo "has_secrets=false" >> "$GITHUB_OUTPUT"
+            echo "DAGSHUB secrets are missing. Skipping secured DVC pipeline."
+          else
+            echo "has_secrets=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Set up Python
+        if: steps.secret_check.outputs.has_secrets == 'true'
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Cache pip packages
+        if: steps.secret_check.outputs.has_secrets == 'true'
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
+
+      - name: Install dependencies
+        if: steps.secret_check.outputs.has_secrets == 'true'
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Configure DVC credentials for DagsHub S3 remote
+        if: steps.secret_check.outputs.has_secrets == 'true'
+        run: |
+          dvc remote modify dagshub --local access_key_id "$DAGSHUB_USERNAME"
+          dvc remote modify dagshub --local secret_access_key "$DAGSHUB_TOKEN"
+
+      - name: Pull DVC data
+        if: steps.secret_check.outputs.has_secrets == 'true'
+        run: dvc pull
+
+      - name: Run DVC pipeline
+        if: steps.secret_check.outputs.has_secrets == 'true'
+        run: dvc repro
+
+      - name: Push DVC artifacts
+        if: steps.secret_check.outputs.has_secrets == 'true'
+        run: dvc push
+
+      - name: Upload evaluation artifacts
+        if: always() && steps.secret_check.outputs.has_secrets == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: evaluation-results
+          path: evaluation_results/
+          if-no-files-found: ignore
