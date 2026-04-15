@@ -165,7 +165,7 @@ class PredictionResponse(BaseModel):
 def root():
     return {
         "message": "Welcome to Customer Churn Prediction API",
-        "docs": "/docs"
+        "docs": "http://127.0.0.1:8001/docs"
     }
     
 @app.get("/health")
@@ -210,6 +210,11 @@ def predict_batch(data: list[CustomerData]):
 
 if __name__ == "__main__":
     print("Starting API...")
-    uvicorn.run(app, host="0.0.0.0", port=int(os.getenv("PORT", "8001")), reload=False)
+    uvicorn.run(
+        app,
+        host=os.getenv("HOST", "127.0.0.1"),
+        port=int(os.getenv("PORT", "8001")),
+        reload=False,
+    )
 
         
