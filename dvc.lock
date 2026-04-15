@@ -33,20 +33,20 @@ stages:
       md5: 926d3a60b321ffecd9e602d5d259a705
       size: 16909
   train:
-    cmd: conda run -n churn-env python src/train.py
+    cmd: python src/train.py
     deps:
     - path: data/processed/processed_data_X_train.csv
       hash: md5
-      md5: 2c6a7e8e73716e7c4aa4e177eaae99ea
-      size: 1320804
+      md5: 26e229c74068a116d6de9504da8f6c37
+      size: 1326439
     - path: data/processed/processed_data_y_train.csv
       hash: md5
-      md5: 68e89d85327cac3278efca0a39e8672a
-      size: 11274
+      md5: 926d3a60b321ffecd9e602d5d259a705
+      size: 16909
     - path: src/train.py
       hash: md5
-      md5: cf735c0543660e642cb1d88ade4c5c6b
-      size: 3435
+      md5: 4fd9b429bb4f757f60cbd882b875ffaa
+      size: 3546
     params:
       params.yaml:
         lightgbm:
@@ -63,20 +63,20 @@ stages:
           learning_rate: 0.1
           subsample: 0.8
   evaluate:
-    cmd: conda run -n churn-env python src/evaluate.py
+    cmd: python src/evaluate.py
     deps:
     - path: data/processed/processed_data_X_test.csv
       hash: md5
-      md5: 4bfec5c4d2c4c96f4a2e301425081974
-      size: 330912
+      md5: 90abcaaaabef775072361125794ffe9d
+      size: 332322
     - path: data/processed/processed_data_y_test.csv
       hash: md5
-      md5: 484f0cd70ef86d3ec5fb1090c528e721
-      size: 2824
+      md5: 201501840c586317ad0f805ea0d84683
+      size: 4234
     - path: src/evaluate.py
       hash: md5
-      md5: 2da27d498e5598fc649b29094b541376
-      size: 4092
+      md5: 0d230cd651ce29e354bdb547e4801082
+      size: 4215
     outs:
     - path: evaluation_results/confusion_matrix_Logistic_Regression.png
       hash: md5
@@ -84,5 +84,5 @@ stages:
       size: 22881
     - path: evaluation_results/metrics_Logistic_Regression.json
       hash: md5
-      md5: 7458c0cb1c1ee9070b06cb296f29f96c
-      size: 73
+      md5: 0b40f28c144b1de8eec7c208f54e85cd
+      size: 77
