@@ -1,13 +1,13 @@
 param(
-    [string]$DagsHubUsername = $env:DAGSHUB_USERNAME,
-    [string]$DagsHubToken = $(if ($env:DAGSHUB_TOKEN) { $env:DAGSHUB_TOKEN } else { $env:DAGSHUB_USER_TOKEN }),
-    [string]$RemoteName = "dagshub"
+       [string]$DagsHubUsername = $env:DAGSHUB_USERNAME,
+       [string]$DagsHubToken = $(if ($env:DAGSHUB_TOKEN) { $env:DAGSHUB_TOKEN } else { $env:DAGSHUB_USER_TOKEN }),
+       [string]$RemoteName = "dagshub"
 )
 
 $ErrorActionPreference = "Stop"
 
 if (-not $DagsHubUsername -or -not $DagsHubToken) {
-    Write-Error "Missing credentials. Provide -DagsHubUsername and -DagsHubToken or set DAGSHUB_USERNAME and DAGSHUB_TOKEN (or DAGSHUB_USER_TOKEN)."
+       Write-Error "Missing credentials. Provide -DagsHubUsername and -DagsHubToken or set DAGSHUB_USERNAME and DAGSHUB_TOKEN (or DAGSHUB_USER_TOKEN)."
 }
 
 Write-Host "Configuring DVC remote '$RemoteName' with local credentials..."

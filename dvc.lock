@@ -1,7 +1,7 @@
 schema: '2.0'
 stages:
   feature_engineering:
-    cmd: conda run -n churn-env python src/feature_engineering.py
+    cmd: python src/feature_engineering.py
     deps:
     - path: data/raw/WA_Fn-UseC_-Telco-Customer-Churn.csv
       hash: md5
@@ -9,8 +9,8 @@ stages:
       size: 977501
     - path: src/feature_engineering.py
       hash: md5
-      md5: 8a2917426972593b95ce5dc35731be69
-      size: 2901
+      md5: 10a790f168d4c1dbf24533c8a3a2a3db
+      size: 2963
     params:
       params.yaml:
         random_state: 42
@@ -18,20 +18,20 @@ stages:
     outs:
     - path: data/processed/processed_data_X_test.csv
       hash: md5
-      md5: 4bfec5c4d2c4c96f4a2e301425081974
-      size: 330912
+      md5: 90abcaaaabef775072361125794ffe9d
+      size: 332322
     - path: data/processed/processed_data_X_train.csv
       hash: md5
-      md5: 2c6a7e8e73716e7c4aa4e177eaae99ea
-      size: 1320804
+      md5: 26e229c74068a116d6de9504da8f6c37
+      size: 1326439
     - path: data/processed/processed_data_y_test.csv
       hash: md5
-      md5: 484f0cd70ef86d3ec5fb1090c528e721
-      size: 2824
+      md5: 201501840c586317ad0f805ea0d84683
+      size: 4234
     - path: data/processed/processed_data_y_train.csv
       hash: md5
-      md5: 68e89d85327cac3278efca0a39e8672a
-      size: 11274
+      md5: 926d3a60b321ffecd9e602d5d259a705
+      size: 16909
   train:
     cmd: conda run -n churn-env python src/train.py
     deps:
