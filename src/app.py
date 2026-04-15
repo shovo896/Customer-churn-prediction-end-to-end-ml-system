@@ -6,8 +6,8 @@ import os
 from pathlib import Path
 from concurrent.futures import ThreadPoolExecutor, TimeoutError
 from dotenv import load_dotenv
-from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel
+from fastapi import FastAPI, HTTPException, Body
+from pydantic import BaseModel, Field
 import uvicorn
 
 load_dotenv()
@@ -144,21 +144,32 @@ app = FastAPI(
 )
 
 class CustomerData(BaseModel):
-    tenure: float
-    MonthlyCharges: float
-    TotalCharges: float
-    SeniorCitizen: int
-    Partner: int 
-    gender: int
-    Dependents: int
-    PhoneService: int
-    PaperlessBilling: int
-    charge_ratio: float
+    tenure: float = Field(..., examples=[12.0])
+    MonthlyCharges: float = Field(..., examples=[65.5])
+    TotalCharges: float = Field(..., examples=[786.0])
+    SeniorCitizen: int = Field(..., examples=[0])
+    Partner: int = Field(..., examples=[1])
+    gender: int = Field(..., examples=[1])
+    Dependents: int = Field(..., examples=[0])
+    PhoneService: int = Field(..., examples=[1])
+    PaperlessBilling: int = Field(..., examples=[1])
+    charge_ratio: float = Field(..., examples=[0.083])
 
 class PredictionResponse(BaseModel):
     churn_probability: float
     churn_prediction: int
     risk_level: str
+    message: str
+
+
+class BatchPredictionItem(BaseModel):
+    churn_probability: float
+    churn_prediction: int
+    risk_level: str
+
+
+class BatchPredictionResponse(BaseModel):
+    predictions: list[BatchPredictionItem]
     message: str
 
 @app.get("/")
@@ -189,8 +200,47 @@ def predict(data: CustomerData):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.post("/predict_batch")
-def predict_batch(data: list[CustomerData]):
+@app.post(
+    "/predict_batch",
+    response_model=BatchPredictionResponse,
+    summary="Predict batch churn",
+)
+def predict_batch(
+    data: list[CustomerData] = Body(
+        ...,
+        examples={
+            "two_customers": {
+                "summary": "Two sample customers",
+                "value": [
+                    {
+                        "tenure": 12.0,
+                        "MonthlyCharges": 65.5,
+                        "TotalCharges": 786.0,
+                        "SeniorCitizen": 0,
+                        "Partner": 1,
+                        "gender": 1,
+                        "Dependents": 0,
+                        "PhoneService": 1,
+                        "PaperlessBilling": 1,
+                        "charge_ratio": 0.083,
+                    },
+                    {
+                        "tenure": 24.0,
+                        "MonthlyCharges": 70.0,
+                        "TotalCharges": 1200.0,
+                        "SeniorCitizen": 0,
+                        "Partner": 0,
+                        "gender": 0,
+                        "Dependents": 1,
+                        "PhoneService": 1,
+                        "PaperlessBilling": 0,
+                        "charge_ratio": 0.058,
+                    },
+                ],
+            }
+        },
+    )
+):
     try:
         input_df = pd.DataFrame([item.model_dump() for item in data])
         model_input = prepare_features(input_df)
