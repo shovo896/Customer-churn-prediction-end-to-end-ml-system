@@ -81,6 +81,10 @@ stages:
       hash: md5
       md5: 201501840c586317ad0f805ea0d84683
       size: 4234
+    - path: scripts/run_stage.py
+      hash: md5
+      md5: a2130b7365df8b0c59c723badecbb375
+      size: 922
     - path: src/evaluate.py
       hash: md5
       md5: 0d230cd651ce29e354bdb547e4801082
@@ -94,3 +98,52 @@ stages:
       hash: md5
       md5: 0b40f28c144b1de8eec7c208f54e85cd
       size: 77
+  tune:
+    cmd: python scripts/run_stage.py src/tune.py
+    deps:
+    - path: data/processed/processed_data_X_test.csv
+      hash: md5
+      md5: 90abcaaaabef775072361125794ffe9d
+      size: 332322
+    - path: data/processed/processed_data_X_train.csv
+      hash: md5
+      md5: 26e229c74068a116d6de9504da8f6c37
+      size: 1326439
+    - path: data/processed/processed_data_y_test.csv
+      hash: md5
+      md5: 201501840c586317ad0f805ea0d84683
+      size: 4234
+    - path: data/processed/processed_data_y_train.csv
+      hash: md5
+      md5: 926d3a60b321ffecd9e602d5d259a705
+      size: 16909
+    - path: scripts/run_stage.py
+      hash: md5
+      md5: a2130b7365df8b0c59c723badecbb375
+      size: 922
+    - path: src/tune.py
+      hash: md5
+      md5: 0c3721cd7694b403aadd3e6a88291cb4
+      size: 4335
+    params:
+      params.yaml:
+        lightgbm:
+          n_estimators: 100
+          max_depth: 6
+          learning_rate: 0.1
+          subsample: 0.8
+        random_state: 42
+        xgboost:
+          n_estimators: 100
+          max_depth: 6
+          learning_rate: 0.1
+          subsample: 0.8
+    outs:
+    - path: best_lgbm_params.yaml
+      hash: md5
+      md5: d963c8beaeb058d6336179bedd1247d6
+      size: 240
+    - path: best_xgb_params.yaml
+      hash: md5
+      md5: f2d112a0eadd900f4a93dc40a25fac09
+      size: 200

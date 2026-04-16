@@ -63,3 +63,5 @@ venv/
 .env
 .env.*
 !.env.example
+/best_xgb_params.yaml
+/best_lgbm_params.yaml
