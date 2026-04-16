@@ -7,6 +7,10 @@ stages:
       hash: md5
       md5: 0f9de68e012bd3aed5fa7cdc9fc421af
       size: 977501
+    - path: data/raw/data_ingestion_report.txt
+      hash: md5
+      md5: 0401726380b93cffc78785b582e7b03c
+      size: 5298
     - path: scripts/run_stage.py
       hash: md5
       md5: a2130b7365df8b0c59c723badecbb375
@@ -73,6 +77,14 @@ stages:
   evaluate:
     cmd: python scripts/run_stage.py src/evaluate.py
     deps:
+    - path: best_lgbm_params.yaml
+      hash: md5
+      md5: d963c8beaeb058d6336179bedd1247d6
+      size: 240
+    - path: best_xgb_params.yaml
+      hash: md5
+      md5: f2d112a0eadd900f4a93dc40a25fac09
+      size: 200
     - path: data/processed/processed_data_X_test.csv
       hash: md5
       md5: 90abcaaaabef775072361125794ffe9d
@@ -147,3 +159,23 @@ stages:
       hash: md5
       md5: f2d112a0eadd900f4a93dc40a25fac09
       size: 200
+  data_ingestion:
+    cmd: python scripts/run_stage.py src/data_ingestion.py
+    deps:
+    - path: data/raw/WA_Fn-UseC_-Telco-Customer-Churn.csv
+      hash: md5
+      md5: 0f9de68e012bd3aed5fa7cdc9fc421af
+      size: 977501
+    - path: scripts/run_stage.py
+      hash: md5
+      md5: a2130b7365df8b0c59c723badecbb375
+      size: 922
+    - path: src/data_ingestion.py
+      hash: md5
+      md5: 8cf407b4edbc7fc67ec8f894f6767ad3
+      size: 1758
+    outs:
+    - path: data/raw/data_ingestion_report.txt
+      hash: md5
+      md5: 0401726380b93cffc78785b582e7b03c
+      size: 5298
