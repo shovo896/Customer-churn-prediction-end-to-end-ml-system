@@ -58,6 +58,8 @@ target/
 
 # Local project settings
 .venv/
+.venv311/
+venv/
 .env
 .env.*
 !.env.example
