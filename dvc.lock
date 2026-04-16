@@ -7,6 +7,10 @@ stages:
       hash: md5
       md5: 0f9de68e012bd3aed5fa7cdc9fc421af
       size: 977501
+    - path: scripts/run_stage.py
+      hash: md5
+      md5: a2130b7365df8b0c59c723badecbb375
+      size: 922
     - path: src/feature_engineering.py
       hash: md5
       md5: 783f52ea784f9862787cf131c3d84ed0
@@ -43,6 +47,10 @@ stages:
       hash: md5
       md5: 926d3a60b321ffecd9e602d5d259a705
       size: 16909
+    - path: scripts/run_stage.py
+      hash: md5
+      md5: a2130b7365df8b0c59c723badecbb375
+      size: 922
     - path: src/train.py
       hash: md5
       md5: 4fd9b429bb4f757f60cbd882b875ffaa
