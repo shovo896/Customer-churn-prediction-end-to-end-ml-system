@@ -28,6 +28,24 @@ stages:
           - lightgbm
           - logistic_regression
 
+  tune:
+    cmd: python scripts/run_stage.py src/tune.py
+    deps:
+      - scripts/run_stage.py
+      - src/tune.py
+      - data/processed/processed_data_X_train.csv
+      - data/processed/processed_data_X_test.csv
+      - data/processed/processed_data_y_train.csv
+      - data/processed/processed_data_y_test.csv
+    params:
+      - params.yaml:
+          - random_state
+          - xgboost
+          - lightgbm
+    outs:
+      - best_xgb_params.yaml
+      - best_lgbm_params.yaml
+
   evaluate:
     cmd: python scripts/run_stage.py src/evaluate.py
     deps:
