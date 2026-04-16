@@ -2,6 +2,7 @@
 
 from pathlib import Path
 import sys
+import io
 
 try:
     import pandas as pd
@@ -18,6 +19,7 @@ except ModuleNotFoundError as exc:
 load_dotenv()
 
 RAW_DATA_PATH = Path("data/raw/WA_Fn-UseC_-Telco-Customer-Churn.csv")
+REPORT_PATH = Path("data/raw/data_ingestion_report.txt")
 
 
 def load_data() -> pd.DataFrame:
@@ -27,12 +29,31 @@ def load_data() -> pd.DataFrame:
 
 
 def basic_info(df: pd.DataFrame) -> None:
+    buffer = io.StringIO()
+    df.info(buf=buffer)
+    info_text = buffer.getvalue()
+    describe_text = df.describe(include="all").to_string()
+    missing_text = df.isnull().sum().to_string()
+
+    report = (
+        "Basic Information about the dataset:\n"
+        f"{info_text}\n"
+        "Summary Statistics:\n"
+        f"{describe_text}\n\n"
+        "Missing Values:\n"
+        f"{missing_text}\n"
+    )
+
+    REPORT_PATH.parent.mkdir(parents=True, exist_ok=True)
+    REPORT_PATH.write_text(report, encoding="utf-8")
+
     print("Basic Information about the dataset:")
-    print(df.info())
-    print("\nSummary Statistics:")
-    print(df.describe())
+    print(info_text)
+    print("Summary Statistics:")
+    print(describe_text)
     print("\nMissing Values:")
-    print(df.isnull().sum())
+    print(missing_text)
+    print(f"\nIngestion report saved to: {REPORT_PATH}")
 
 
 def main() -> int:
