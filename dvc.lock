@@ -1,7 +1,7 @@
 schema: '2.0'
 stages:
   feature_engineering:
-    cmd: python src/feature_engineering.py
+    cmd: python scripts/run_stage.py src/feature_engineering.py
     deps:
     - path: data/raw/WA_Fn-UseC_-Telco-Customer-Churn.csv
       hash: md5
@@ -9,8 +9,8 @@ stages:
       size: 977501
     - path: src/feature_engineering.py
       hash: md5
-      md5: 10a790f168d4c1dbf24533c8a3a2a3db
-      size: 2963
+      md5: 783f52ea784f9862787cf131c3d84ed0
+      size: 2965
     params:
       params.yaml:
         random_state: 42
@@ -33,7 +33,7 @@ stages:
       md5: 926d3a60b321ffecd9e602d5d259a705
       size: 16909
   train:
-    cmd: python src/train.py
+    cmd: python scripts/run_stage.py src/train.py
     deps:
     - path: data/processed/processed_data_X_train.csv
       hash: md5
@@ -63,7 +63,7 @@ stages:
           learning_rate: 0.1
           subsample: 0.8
   evaluate:
-    cmd: python src/evaluate.py
+    cmd: python scripts/run_stage.py src/evaluate.py
     deps:
     - path: data/processed/processed_data_X_test.csv
       hash: md5
